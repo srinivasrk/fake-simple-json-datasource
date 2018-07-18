@@ -46,15 +46,21 @@ app.all('/query', function(req, res){
   .then(function(responseData) {
 
     _.each(req.body.targets, function(target) {
+
       var k = _.filter(responseData.series, function(t) {
         return t.tags['cpu'] === target.target;
       });
       _.each(k, function(kk) {
         let temp = {}
         temp['target'] = kk.tags['cpu']
+        _.map(kk.values, (val) =>{
+          val[0] = new Date(val[0]).getTime();
+        })
         temp['datapoints'] = kk.values
         tsResult.push(temp)
       });
+
+
     })
 
     res.json(tsResult);
