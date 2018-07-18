@@ -38,34 +38,31 @@ app.all('/search', function(req, res){
 // });
 
 app.all('/query', function(req, res){
-  setCORSHeaders(res);
 
+  setCORSHeaders(res);
+  console.log(req)
   var tsResult = [];
   fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
-  .then(res => res.json())
+  .then(response => response.json())
   .then(function(responseData) {
-
     _.each(req.body.targets, function(target) {
 
-      var k = _.filter(responseData.series, function(t) {
+      var targetData = _.filter(responseData.series, function(t) {
         return t.tags['cpu'] === target.target;
       });
-      _.each(k, function(kk) {
+      _.each(targetData, function(data) {
         let temp = {}
-        temp['target'] = kk.tags['cpu']
-        _.map(kk.values, (val) =>{
+        temp['target'] = data.tags['cpu']
+        _.map(data.values, (val) =>{
           //getting date, value but we need value, date
           let newtemp = val[1]
           val[1] = new Date(val[0]).getTime();
           val[0] = newtemp
         })
-        temp['datapoints'] = kk.values
+        temp['datapoints'] = data.values
         tsResult.push(temp)
       });
-
-
     })
-
     res.json(tsResult);
     res.end();
   })
