@@ -54,7 +54,10 @@ app.all('/query', function(req, res){
         let temp = {}
         temp['target'] = kk.tags['cpu']
         _.map(kk.values, (val) =>{
-          val[0] = new Date(val[0]).getTime();
+          //getting date, value but we need value, date
+          let newtemp = val[1]
+          val[1] = new Date(val[0]).getTime();
+          val[0] = newtemp
         })
         temp['datapoints'] = kk.values
         tsResult.push(temp)
