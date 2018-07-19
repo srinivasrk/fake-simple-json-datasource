@@ -5,7 +5,18 @@ var app = express();
 var fetch = require("node-fetch");
 
 app.use(bodyParser.json());
-
+let server = "localhost:9092"
+let taskName = "default"
+let endpoint = "default"
+if(process.env.k_server){
+  server = process.env.k_server
+}
+if(process.env.k_task){
+  taskName = process.env.k_task
+}
+if(process.env.k_endpoint){
+  endpoint = process.env.k_endpoint
+}
 
 function setCORSHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -22,15 +33,17 @@ app.all('/', function(req, res) {
 });
 
 app.all('/search', function(req, res){
+  //This endpoint searches and finds the tags which can be used for series
   setCORSHeaders(res);
   let result = [];
-  fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
+  fetch(`http://${server}/kapacitor/v1/tasks/${taskName}/${endpoint}`)
   .then(response => response.json())
   .then(function(responseData) {
     _.each(responseData.series, (series) => {
         console.log(series.tags);
         result.push(series.tags['cpu'])
     })
+    result.push('All')
     res.json(result);
     res.end();
   })
@@ -47,7 +60,7 @@ app.all('/search', function(req, res){
 // });
 
 app.all('/query', function(req, res){
-
+  // This endpoint gets the data
   setCORSHeaders(res);
   console.log(req.body.targets)
   var tsResult = [];
@@ -55,18 +68,35 @@ app.all('/query', function(req, res){
   .then(response => response.json())
   .then(function(responseData) {
     _.each(req.body.targets, function(target) {
-
-      var targetData = _.filter(responseData.series, function(t) {
-        return t.tags['cpu'] === target.target;
-      });
-      _.each(targetData, function(data) {
-        let temp = {}
-        temp['target'] = data.tags['cpu']
-        _.map(data.values, (val) =>{
-          //getting date, value but we need value, date
-          let newtemp = val[1]
-          val[1] = new Date(val[0]).getTime();
-          val[0] = newtemp
+      if(target.target != 'All') {
+        var targetData = _.filter(responseData.series, function(t) {
+          return t.tags['cpu'] === target.target;
+        });
+        _.each(targetData, function(data) {
+          let temp = {}
+          temp['target'] = data.tags['cpu']
+          _.map(data.values, (val) =>{
+            //getting date, value but we need value, date
+            let newtemp = val[1]
+            val[1] = new Date(val[0]).getTime();
+            val[0] = newtemp
+          })
+          temp['datapoints'] = data.values
+          tsResult.push(temp)
+        });
+      } else {
+        // All is selected so send all series
+        _.each(responseData, function(data) {
+          let temp = {}
+          temp['target'] = data.tags['cpu']
+          _.map(data.values, (val) =>{
+            //getting date, value but we need value, date
+            let newtemp = val[1]
+            val[1] = new Date(val[0]).getTime();
+            val[0] = newtemp
+          })
+          temp['datapoints'] = data.values
+          tsResult.push(temp)
         })
         temp['datapoints'] = data.values
         tsResult.push(temp)
