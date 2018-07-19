@@ -5,6 +5,7 @@ var app = express();
 var fetch = require("node-fetch");
 
 app.use(bodyParser.json());
+
 let server = "localhost:9092"
 let taskName = "default"
 let endpoint = "default"
@@ -34,6 +35,7 @@ app.all('/', function(req, res) {
 
 app.all('/search', function(req, res){
   //This endpoint searches and finds the tags which can be used for series
+  console.log("Accessing /search endpoint")
   setCORSHeaders(res);
   let result = [];
   fetch(`http://${server}/kapacitor/v1/tasks/${taskName}/${endpoint}`)
@@ -62,7 +64,7 @@ app.all('/search', function(req, res){
 app.all('/query', function(req, res){
   // This endpoint gets the data
   setCORSHeaders(res);
-
+  console.log("Accessing /query endpoint")
   var tsResult = [];
   fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
   .then(response => response.json())
@@ -90,7 +92,7 @@ app.all('/query', function(req, res){
         // All is selected so send all series
         _.each(responseData.series, function(data) {
           let temp = {}
-          
+
           temp['target'] = data.tags['cpu']
           _.map(data.values, (val) =>{
             //getting date, value but we need value, date
