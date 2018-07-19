@@ -6,17 +6,26 @@ var fetch = require("node-fetch");
 
 app.use(bodyParser.json());
 
-let server = "localhost:9092"
-let taskName = "default"
-let endpoint = "default"
+let server = ""
+let taskName = ""
+let endpoint = ""
 if(process.env.k_server){
   server = process.env.k_server
+} else {
+  console.log("Server (k_server) environment variable not found")
+  process.exit(0)
 }
 if(process.env.k_task){
   taskName = process.env.k_task
+} else {
+  console.log("Kapacitor (k_taskName) task environment variable not found")
+  process.exit(0)
 }
 if(process.env.k_endpoint){
   endpoint = process.env.k_endpoint
+} else {
+  console.log("Endpoint (k_endpoint) environment variable not found")
+  process.exit(0)
 }
 
 function setCORSHeaders(res) {
@@ -66,7 +75,7 @@ app.all('/query', function(req, res){
   setCORSHeaders(res);
   console.log("Accessing /query endpoint")
   var tsResult = [];
-  fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
+  fetch(`http://${server}/kapacitor/v1/tasks/${taskName}/${endpoint}`)
   .then(response => response.json())
   .then(function(responseData) {
     _.each(req.body.targets, function(target) {
@@ -105,7 +114,6 @@ app.all('/query', function(req, res){
         })
       }
       })
-
     res.json(tsResult);
     res.end();
   })
