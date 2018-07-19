@@ -23,9 +23,18 @@ app.all('/', function(req, res) {
 
 app.all('/search', function(req, res){
   setCORSHeaders(res);
-  let result = ['cpu-total', 'cpu0', 'cpu1', 'cpu2', 'cpu3', 'cpu4', 'cpu5']
-  res.json(result);
-  res.end();
+  let result = [];
+  fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
+  .then(response => response.json())
+  .then(function(responseData) {
+    _.each(responseData.series, (series) => {
+        console.log(series.tags);
+        result.push(series.tags['cpu'])
+    })
+    res.json(result);
+    res.end();
+  })
+
 });
 
 // app.all('/annotations', function(req, res) {
