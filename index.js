@@ -63,7 +63,6 @@ app.all('/query', function(req, res){
   // This endpoint gets the data
   setCORSHeaders(res);
 
-  console.log(req.body.targets)
   var tsResult = [];
   fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
   .then(response => response.json())
@@ -102,11 +101,9 @@ app.all('/query', function(req, res){
           temp['datapoints'] = data.values
           tsResult.push(temp)
         })
-        temp['datapoints'] = data.values
-        tsResult.push(temp)
-      });
-    })
-    console.log(tsResult)
+      }
+      })
+
     res.json(tsResult);
     res.end();
   })
