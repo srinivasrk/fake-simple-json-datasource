@@ -1,0 +1,12 @@
+dbrp "msd_dev_db"."autogen"
+
+batch
+    |query('''
+        select ELAPSED(value, 1m) from "msd_dev_db"."autogen"."level"
+        where "generator"='scada'
+        ''')
+        .period(60d)
+        .every(1s)
+        .groupBy('site')
+    |where(lambda: "elapsed" > 5)
+    |httpOut('gaps')
