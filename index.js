@@ -62,7 +62,7 @@ app.all('/search', function(req, res){
 app.all('/query', function(req, res){
   // This endpoint gets the data
   setCORSHeaders(res);
-  console.log(req)
+
   var tsResult = [];
   fetch('http://159.203.167.38:9092/kapacitor/v1/tasks/cpu_stream_dump/data')
   .then(response => response.json())
@@ -74,6 +74,7 @@ app.all('/query', function(req, res){
         });
         _.each(targetData, function(data) {
           let temp = {}
+
           temp['target'] = data.tags['cpu']
           _.map(data.values, (val) =>{
             //getting date, value but we need value, date
@@ -85,9 +86,11 @@ app.all('/query', function(req, res){
           tsResult.push(temp)
         });
       } else {
+        console.log("selecting all data")
         // All is selected so send all series
-        _.each(responseData, function(data) {
+        _.each(responseData.series, function(data) {
           let temp = {}
+          
           temp['target'] = data.tags['cpu']
           _.map(data.values, (val) =>{
             //getting date, value but we need value, date
